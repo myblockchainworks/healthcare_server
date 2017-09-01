@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 contract HealthcareTemplateContract {
 
@@ -15,7 +15,20 @@ contract HealthcareTemplateContract {
         string projectImageHash;
     }
 
+    // Project Question Object
+    struct ProjectQuestion {
+        bool question1;
+        bool question2;
+        bool question3;
+        bool question4;
+        bool question5;
+        bool question6;
+        uint index;
+    }
+
     Project[] public projects; // List of all projects
+
+    ProjectQuestion[] public questions; // List of all questions for a project
 
     // Triggered when new project is created.
     event ProjectCreated(uint index, string location);
@@ -25,11 +38,8 @@ contract HealthcareTemplateContract {
 
     // Functions with this modifier can only be executed by the owner
     modifier onlyOwner {
-        if (msg.sender != owner) {
-            throw;
-        } else {
-            _;
-        }
+        require(msg.sender == owner);
+        _;
     }
 
     // Delete / kill the contract... only the owner has rights to do this
@@ -48,7 +58,7 @@ contract HealthcareTemplateContract {
     // @param _projectDetailHash The hash string from swarm of the project details
     // @param _projectImageHash The hash string from swarm of the project image
     // @return the transaction address and send the event as ProjectCreated at Location
-    function addNewProject(string _location, string _projectDetailHash, string _projectImageHash) onlyOwner{
+    function addNewProject(string _location, string _projectDetailHash, string _projectImageHash) {
         uint currentIndex = projects.length;
         address empty = 0x000;
         projects.push(Project({
@@ -62,11 +72,27 @@ contract HealthcareTemplateContract {
         ProjectCreated(currentIndex, _location);
     }
 
+    // @notice Add questions for the new project
+    // @param quest1 to quest6 The boolean value of true or false for the selected question
+    // @return the transaction address
+    function addQuestion(bool quest1, bool quest2, bool quest3, bool quest4, bool quest5, bool quest6)  {
+        uint currentIndex = questions.length;
+        questions.push(ProjectQuestion({
+            question1 : quest1,
+            question2 : quest2,
+            question3 : quest3,
+            question4 : quest4,
+            question5 : quest5,
+            question6 : quest6,
+            index : currentIndex
+        }));
+    }
+
     // @notice Assign a coordinator to the project
     // @param _index The index position of the project
     // @param _coordinator The coordinator of the project
     // retrun the transaction address and send the event as CoordinatorAssigned with coordinator address
-    function assignCoordinator(uint _index, address _coordinator) onlyOwner{
+    function assignCoordinator(uint _index, address _coordinator) {
         projects[_index].coordinator = _coordinator;
         CoordinatorAssigned(_index, _coordinator);
     }
@@ -82,5 +108,9 @@ contract HealthcareTemplateContract {
     // @return the project location, coordinator and swarm hash
     function getProjectByIndex(uint _index) constant returns (uint, string, address, string, string) {
         return (projects[_index].index, projects[_index].location, projects[_index].coordinator, projects[_index].projectDetailHash, projects[_index].projectImageHash);
+    }
+
+    function getQuestionByIndex(uint _index) constant returns (uint, bool, bool, bool, bool, bool, bool) {
+        return (questions[_index].index, questions[_index].question1, questions[_index].question2, questions[_index].question3, questions[_index].question4, questions[_index].question5, questions[_index].question6);
     }
 }
